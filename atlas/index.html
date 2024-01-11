@@ -1,0 +1,629 @@
+﻿<!doctype html>
+<html itemscope="" itemtype="http://schema.org/WebPage" lang="en">
+	<head>
+		<link rel="shortcut icon" href="/favicon32.gif" type="image/x-icon" sizes="32x32" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<title>Atlas</title>
+		
+		<meta name="description" content="A completely free and open source application for automatic nesting. Comes with advanced features like part-in-part nesting and concave area detection." />
+		
+		<link type="text/css" rel="stylesheet" media="all" href="font/latolatinfonts.css" />
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		
+		<script src="util/pathsegpolyfill.js"></script>
+		<script src="util/matrix.js"></script>
+		<script src="util/domparser.js"></script>
+		<script src="util/clipper.js"></script>
+		<script src="util/parallel.js"></script>
+		<script src="util/geometryutil.js"></script>
+		<script src="util/placementworker.js"></script>
+		<script src="svgparser.js"></script>
+		<script src="svgnest.js"></script>
+		
+		<script src="util/filesaver.js"></script>
+		
+		<script>
+		// UI-specific stuff, button clicks go here
+		function ready(fn){
+			if (document.readyState != 'loading'){
+				fn();
+			}
+			else {
+				document.addEventListener('DOMContentLoaded', fn);
+			}
+		}
+		
+		ready(function()
+		{
+			function hideSplash(){
+				var splash = document.getElementById('splash');
+				var svgnest = document.getElementById('svgnest');
+				if(splash){
+					splash.remove();
+				}
+			}
+			
+			var demo = document.getElementById('demo');
+			var upload = document.getElementById('upload');
+			var display = document.getElementById('select');
+
+			var enterDemo = function(){
+				try{
+                    var svgnest = document.getElementById('svgnest');
+                    svgnest.setAttribute('style','display: inline');
+                    svgnest.setAttribute('width' , '1280px');
+                    svgnest.setAttribute('height' , '720px');
+
+					var svg = window.SvgNest.parsesvg(display.innerHTML);
+					display.innerHTML = '';
+					display.appendChild(svg);
+					svg.setAttribute('width' , '1280px');
+                    svg.setAttribute('height' , '720px');
+
+                    console.log(display.childNodes[0].toString());
+				}
+				catch(e){
+					/*message.innerHTML = e;
+					message.className = 'error animated bounce';*/
+					return;
+				}			
+				
+				hideSplash();
+
+				// Prepare the bin
+                var node = document.getElementById("testbinrect");
+
+                window.SvgNest.setbin(node);
+                //svg.childNodes[svg.childNodes.length - 1].setAttribute('class','active');
+                start.className = 'button start';
+
+                console.log(node);
+
+				hideSplash();
+			};
+			
+			// button clicks
+			var upload = document.getElementById('upload');
+			var start = document.getElementById('start');
+			var download = document.getElementById('download');
+			var startlabel = document.getElementById('startlabel');
+			var fileinput = document.getElementById('fileinput');
+			
+			var config = document.getElementById('config');
+			var configbutton = document.getElementById('configbutton');
+			var configsave = document.getElementById('configsave');
+			
+			var zoomin = document.getElementById('zoominbutton');
+			var zoomout = document.getElementById('zoomoutbutton');
+			
+			var isworking = false;
+			
+			start.onclick = function(){
+				if(this.className == 'button start disabled'){
+					return false;
+				}
+				iterations = 0;
+				if(isworking){
+					stopnest();
+				}
+				else{
+					startnest();
+				}
+				
+				display.className = 'disabled';
+				document.getElementById('info_time').setAttribute('style','display: none');
+			};
+			
+			function startnest(){
+				SvgNest.start(progress, renderSvg);
+				startlabel.innerHTML = '正在处理';
+                start.className = 'button start disabled';
+				
+				var svg = document.querySelector('#select svg');
+				if(svg){
+					svg.removeAttribute('style');
+				}
+				
+				isworking = true;
+			}
+			
+			function stopnest(){
+				SvgNest.stop();
+				startlabel.innerHTML = '开始排版';
+				start.className = 'button start disabled';
+				configbutton.className = 'button config';
+				
+				isworking = false;
+			}
+
+			download.onclick = function(){
+				if(download.className == 'button download disabled'){
+					return false;
+				}
+
+				var bins = document.getElementById('bins');
+				
+				if(bins.children.length == 0)
+				{
+					return
+				}
+				
+				var svg;
+				svg = display.querySelector('svg');
+				
+				if(!svg){
+					svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+				}
+				
+				svg = svg.cloneNode(false);
+				
+				// maintain stroke, fill etc of input
+				if(SvgNest.style){
+					svg.appendChild(SvgNest.style);
+				}
+				
+				var binHeight = parseInt(bins.children[0].getAttribute('height'));
+				
+				for(i=0; i<bins.children.length; i++){
+					var b = bins.children[i];
+					var group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+					group.setAttribute('transform', 'translate(0 '+binHeight*1.1*i+')');
+					for(var j=0; j<b.children.length; j++){
+						group.appendChild(b.children[j].cloneNode(true));
+					}
+					
+					svg.appendChild(group);
+				}
+				
+				var output;
+				if(typeof XMLSerializer != 'undefined'){
+					output = (new XMLSerializer()).serializeToString(svg);
+				}
+				else{
+					output = svg.outerHTML;
+				}
+				
+				var blob = new Blob([output], {type: "image/svg+xml;charset=utf-8"});
+
+				var currentDate = new Date();
+				var imgName = 'pattern-' + currentDate.getFullYear() + '.' + (currentDate.getMonth() + 1)  + '.' + currentDate.getDate() + '-' + currentDate.getHours() + '.' + currentDate.getMinutes() + '.' + currentDate.getSeconds() + '.svg';
+
+				saveAs(blob, imgName);
+			}
+
+            fileinput.onchange = function(e){
+                var file = e.target.files[0];
+                if(!file){
+                    return;
+                }
+
+                if(!file.type || (file.type.search('svg') < 0 && file.type.search('xml') < 0 &&  file.type.search('text') < 0)){
+                    /*message.innerHTML = 'Only SVG files allowed';
+                    message.className = 'error animated bounce';*/
+                    return
+                }
+
+                var reader = new FileReader();
+                var input = this;
+                reader.onload = function(e) {
+                    input.value = null;
+                    if(reader.result){
+                        try{
+                            var parser = new DOMParser();
+                            var svg = parser.parseFromString(reader.result, "image/svg+xml").childNodes[0];
+//                            var svg = SvgNest.parsesvg(reader.result);
+                            var rectNode = document.getElementById('testbinrect');
+                            rectNode.setAttribute('width',svg.getAttribute('width'));
+                            rectNode.setAttribute('height',svg.getAttribute('height'));
+                            var oldsvg = display.querySelector('svg');
+                            var svgClone = oldsvg.cloneNode(false);
+                            display.innerHTML = '';
+                            var childs = svg.getElementsByTagName('path');
+
+                            for(var i = 0;i<childs.length;i++){
+                                var child = childs[i];
+                                if(child.id.indexOf('ClosedPath_')>-1){
+                                    child.setAttribute('transform','scale(0.3)');
+                                    svgClone.innerHTML+=child.outerHTML;
+                                }
+                            }
+                            svgClone.innerHTML+=rectNode.outerHTML;
+                            svgClone = SvgNest.parsesvg(svgClone.outerHTML.toString());
+                            display.appendChild(svgClone);
+
+                        }
+                        catch(e){
+                            /*message.innerHTML = e;
+                            message.className = 'error animated bounce';*/
+                            return;
+                        }
+
+                        hideSplash();
+                        /*message.innerHTML = 'Click on the outline to use as the bin';
+                        message.className = 'active animated bounce';*/
+                        start.className = 'button start';
+                        attachSvgListeners(svgClone);
+                    }
+                }
+
+                reader.readAsText(file);
+            };
+
+
+
+            function attachSvgListeners(svg){
+				// attach event listeners
+				for(var i=0; i<svg.childNodes.length; i++){
+					var node = svg.childNodes[i];
+                    if(node.nodeType == 1){
+//						node.onclick = function(){
+							if(display.className == 'disabled'){
+								return;
+							}
+							var currentbin = document.querySelector('#select .active');
+							if(currentbin){
+								currentbin.removeAttribute('class');
+							}
+							window.SvgNest.setbin(node);
+                            node.setAttribute('class','active');
+
+							start.className = 'button start';
+//							message.className = '';
+//						}
+					}
+				}
+			}
+			
+			var prevpercent = 0;
+			var startTime = null;
+			var endTime = null;
+			
+			function progress(percent){
+				var transition = percent > prevpercent ? '; transition: width 0.1s' : '';
+				document.getElementById('info_progress').setAttribute('style','width: '+Math.round(percent*100)+'% ' + transition);
+				document.getElementById('info').setAttribute('style','display: block');
+
+				document.getElementById('progressvalue').textContent = (percent * 100).toFixed(0) + "%";
+				
+				prevpercent = percent;
+				
+				var now = new Date().getTime();
+				if(startTime && now){
+					var diff = now-startTime;
+					// show a time estimate for long-running placements
+					var estimate = (diff/percent)*(1-percent);
+					document.getElementById('info_time').innerHTML = millisecondsToStr(estimate)+' remaining';
+					
+					if(diff > 5000 && percent < 0.3 && percent > 0.02 && estimate > 10000){
+						document.getElementById('info_time').setAttribute('style','display: block');
+					}
+				}
+				
+				if(percent > 0.95 || percent < 0.02){
+					document.getElementById('info_time').setAttribute('style','display: none');
+				}
+                if(percent < 0.2){
+					startTime = new Date().getTime();
+				}
+
+				endTime = new Date().getTime();
+			}
+			
+			var iterations = 0;
+
+			function get_random_color() {
+				function c() {
+					var hex = Math.floor(Math.random()*256).toString(16);
+					return ("0"+String(hex)).substr(-2); // pad with zero
+				}
+				return "#"+c()+c()+c();
+			}
+
+			function renderSvg(svglist, efficiency, numplaced){
+				iterations++;
+
+				document.getElementById('info_iterations').innerHTML = iterations;
+				
+				if(!svglist || svglist.length == 0){
+					return;
+				}
+				var bins = document.getElementById('bins');
+				bins.innerHTML = '';
+				
+				for(var i=0; i<svglist.length; i++){
+					if(svglist.length > 2){
+						svglist[i].setAttribute('class','grid');
+
+					}
+
+					for (var j = 0 ; j < svglist[i].childNodes.length ; ++j)
+					{
+					    if (svglist[i].childNodes[j].childNodes[0] != null)
+						{
+                            svglist[i].childNodes[j].childNodes[0].setAttribute('fill' , get_random_color());
+						}
+					}
+
+					console.log(svglist[i].getBBox());
+					bins.appendChild(svglist[i]);
+
+
+				}
+				
+				if(efficiency || efficiency === 0)
+				{
+					efficiency = efficiency * 511.822 / 405.822;
+					document.getElementById('info_efficiency').innerHTML = (efficiency*100).toFixed(2);//Math.round(efficiency*100);
+				}
+
+				var diff = endTime - startTime;
+				document.getElementById('info_usedtime').innerHTML = (diff / 1000).toFixed(2);//Math.round(efficiency*100);
+
+				document.getElementById('info_placed').innerHTML = numplaced;
+				
+				document.getElementById('info_placement').setAttribute('style','display: block');
+				display.setAttribute('style','display: none');
+				download.className = 'button download';
+
+				start.className = 'button start disabled';
+
+
+                stopnest();
+			}
+			
+			function millisecondsToStr (milliseconds) {
+				function numberEnding (number) {
+					return (number > 1) ? 's' : '';
+				}
+
+				var temp = Math.floor(milliseconds / 1000);
+				var years = Math.floor(temp / 31536000);
+				if (years) {
+					return years + ' year' + numberEnding(years);
+				}
+				var days = Math.floor((temp %= 31536000) / 86400);
+				if (days) {
+					return days + ' day' + numberEnding(days);
+				}
+				var hours = Math.floor((temp %= 86400) / 3600);
+				if (hours) {
+					return hours + ' hour' + numberEnding(hours);
+				}
+				var minutes = Math.floor((temp %= 3600) / 60);
+				if (minutes) {
+					return minutes + ' minute' + numberEnding(minutes);
+				}
+				var seconds = temp % 60;
+				if (seconds) {
+					return seconds + ' second' + numberEnding(seconds);
+				}
+				return 'less than a second';
+			}
+
+            enterDemo();
+		});
+		</script>
+	</head>
+	<body>
+		<div id="splash">
+			<ul class="nav">
+
+			</ul>
+
+		</div>
+		
+		<div id="svgnest">
+
+			<div class="sidebar" style="position:absolute;right:0px;width:100px;height:600px;">
+				<div id="controls">
+					<ul class="nav">
+						<li class="button start" id="upload" style="position: relative;">
+                            <input id="fileinput" type="file" style="opacity: 0;position: absolute;width:100%;left: 0px;top: 0px;font-size: 1.2em;cursor:pointer;z-index: 10;" />
+                            <span id="startlabel2" style="position: relative; top:-5px;">上传版型</span>
+							<img src="img/flow_upload.png" style="position: relative; top:4px;width:32px; height: 32px;">
+						</li>
+						<li class="button start disabled" id="start">
+							<span id="startlabel" style="position: relative; top:-5px;">开始排版</span>
+							<img src="img/process.png" style="position: relative; top:4px;width:32px; height: 32px;">
+						</li>
+						<li class="button download disabled" id="download">
+							<span id="startlabel1" style="position: relative; top:-5px;">保存排版</span>
+							<img src="img/checkout.png" style="position: relative; top:4px;width:32px; height: 32px;">
+						</li>
+					</ul>
+
+
+				</div>
+
+				<div id="info">				
+				<h2 id="info_time"></h2>
+
+				
+				<div id="info_placement">
+					<div class="column left">
+
+						<span class="subscript">利用率</span>
+						<h1 class="label"><span id="info_efficiency"></span><sup>%</sup></h1>
+					</div>
+
+					<div class="column left">
+						<span class="subscript">用时</span>
+						<h1 class="label"><span id="info_usedtime">123213131</span><sup>s</sup></h1>
+					</div>
+					
+					<div class="column right" style="display: none">
+						<h1 class="label" id="info_iterations"></h1>
+						<span class="subscript">Iterations</span>
+					</div>
+					
+					<div class="column left" style="display: none">
+						<h1 class="label"><span id="info_placed"></span></h1>
+						<span class="subscript">Parts placed</span>
+					</div>
+				</div>
+				</div>				
+			</div>
+
+			<div class="progress">
+				<span id='progressvalue' class="progresstext" style="position:fixed;left:50%;margin-left:-10px;">0%</span>
+				<div class="progress_inner" id="info_progress" style="text-align: center;">
+
+				</div>
+
+			</div>
+
+			<div id="select" style="width:1280px;height:720px;">
+			<svg version="1.1" id="svg2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1280px" height="720px" viewBox="0 0 1280 720" enable-background="new 0 0 1147.592 1397.27" xml:space="preserve">
+<polygon id="svg_2" points="684.045,443.734 688.396,447.215   666.488,450.935 666.488,432.651 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_3" points="697.067,404.901 697.067,415.601   709.719,415.905 710.293,406.067 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_4" points="723.908,440.886 715.362,442.463   709.719,435.85 712.627,427.66 721.17,426.079 726.81,432.692 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_5" points="617.292,458.369 618.742,465.049   599.735,465.566 599.735,447.28 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_6" points="619.963,428.025 619.963,438.722   633.189,438.467 633.189,429.192 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_7" points="646.805,464.01 638.259,465.587   632.618,458.974 635.523,450.784 644.069,449.207 649.706,455.819 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_8" points="746.4623203277588,15.734405517578125 716.383279800415,45.106414794921875 729.8683261871338,68.96542358398438 752.298318862915,75.88241577148438 758.3953037261963,65.85440063476562 784.069314956665,67.66842651367188 788.2173252105713,26.431396484375 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_9" points="666.589,476.434 664.255,503.557   681.632,505.633 694.857,499.916 692.262,483.07 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_10" points="673.8184509277344,98.98446655273438 710.3304748535156,129.32546997070312 755.0644836425781,129.32546997070312 755.0644836425781,152.27645874023438 673.8184509277344,152.27645874023438 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_11" points="781.8621444702148,366.63951110839844 798.2681503295898,338.22447204589844 814.6751327514648,366.63951110839844 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_12" points="713.9283351898193,280.17108154296875 706.8503322601318,271.2940673828125 709.3783473968506,260.22906494140625 719.6042995452881,255.30206298828125 729.8273220062256,260.22906494140625 732.3563137054443,271.2940673828125 725.2753200531006,280.17108154296875 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_13" points="647.399,599.509 651.749,602.988   629.84,606.702 629.84,588.419 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_14" points="650.068,569.167 650.068,579.861   662.723,580.171 663.294,570.334 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_15" points="859.5231094360352,91.66064453125 901.5661392211914,92.1646728515625 908.9001235961914,65.7576904296875 897.9301528930664,45.004638671875 886.5271377563477,47.7886962890625 869.6571426391602,28.35064697265625 837.5661392211914,54.57464599609375 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_16" points="694.308,592.604 687.232,583.727   689.758,572.661 699.984,567.735 710.211,572.661 712.736,583.727 705.658,592.604 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_17" points="839.7784194946289,484.96215057373047 844.1304092407227,488.44115447998047 822.2223892211914,492.16112518310547 822.2223892211914,473.8781051635742 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_18" points="856.944,514.209 856.944,524.909   869.597,525.213 870.171,515.376 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_19" points="883.785,550.194 875.24,551.771   869.597,545.158 872.505,536.968 881.048,535.388 886.688,542.001 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_20" points="779.841,537.333 779.841,548.03   793.067,547.775 793.067,538.5 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_21" points="933.3942222595215,389.47906494140625 926.316219329834,380.60205078125 928.8452110290527,369.53607177734375 939.0712242126465,364.61004638671875 949.2941856384277,369.53607177734375 951.8231773376465,380.60205078125 944.7421836853027,389.47906494140625 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_22" points="596.7509765625,43.2047119140625 587.6669921875,89.22470092773438 654.1400146484375,95.90570068359375 670.135009765625,67.07672119140625 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_23" points="676.909,605.146 668.363,606.727   662.723,600.113 665.628,591.92 674.174,590.346 679.814,596.959 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <rect id="svg_24" stroke="#010101" fill="none" height="18.155" width="30.913" y="439.913" x="21.066"/>
+   <rect id="svg_25" stroke="#010101" fill="none" height="5.188" width="29.563" y="452.881" x="106.758"/>
+   <rect id="svg_26" stroke="#010101" fill="none" height="17.637" width="25.963" y="464.809" x="184.038"/>
+   <rect id="svg_27" stroke="#010101" fill="none" height="40.393" width="17.01" y="427.01" x="305.408"/>
+   <rect id="svg_28" stroke="#010101" fill="none" height="17.633" width="17.004" y="458.068" x="262.876"/>
+   <rect id="svg_29" stroke="#010101" fill="none" height="25.868" width="47.904" y="61.424215" x="47.428681"/>
+   <polygon id="svg_30" points="70.04101991653442,277.6082458496094 50.333019733428955,309.7672424316406 105.17101716995239,312.8792419433594 143.86101961135864,295.2432556152344 93.38202333450317,298.3552551269531 90.54301881790161,275.5322570800781 " stroke="#010101" fill="none"/>
+   <polygon id="svg_31" points="65.94967651367188,210.86871337890625 93.56468200683594,238.87771606445312 218.52066040039062,232.13571166992188 140.60968017578125,207.23672485351562 97.51567077636719,188.56472778320312 " stroke="#010101" fill="none"/>
+   <polygon id="svg_32" points="320.9893798828125,367.4445495605469 325.34033203125,370.925537109375 303.432373046875,374.6455383300781 303.432373046875,356.3615417480469 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_33" points="1078.067,402.694 1078.067,413.395   1090.719,413.699 1091.293,403.861 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_34" points="1104.908,438.68 1096.362,440.257   1090.719,433.644 1093.627,425.454 1102.17,423.873 1107.811,430.486 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_35" points="201.0894775390625,163.0501708984375 202.53948974609375,169.73016357421875 183.532470703125,170.24618530273438 183.532470703125,151.961181640625 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_36" points="1000.963,425.818 1000.963,436.516   1014.189,436.261 1014.189,426.985 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_37" points="1027.805,461.804 1019.259,463.381   1013.618,456.768 1016.523,448.578 1025.069,447.001 1030.706,453.613 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_38" points="190.85092163085938,71.56636047363281 160.77090454101562,100.9383544921875 174.25588989257812,124.79734802246094 196.68594360351562,131.71435546875 202.78292846679688,121.68635559082031 228.45693969726562,123.50035095214844 232.60488891601562,82.26335144042969 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_39" points="258.43902587890625,214.93588256835938 256.10504150390625,242.05889892578125 273.48199462890625,244.1348876953125 286.70709228515625,238.41787719726562 284.11199951171875,221.5718994140625 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_40" points="376.793701171875,325.4709167480469 413.30572509765625,355.8119201660156 458.0386962890625,355.8119201660156 458.0386962890625,378.7629089355469 376.793701171875,378.7629089355469 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_41" points="583.783,275.915 600.188,247.5   616.596,275.915 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_42" points="565.774,174.952 558.696,166.075   561.225,155.01 571.451,150.083 581.674,155.01 584.203,166.075 577.122,174.952 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_43" points="1028.399,597.303 1032.749,600.782   1010.84,604.496 1010.84,586.213 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_44" points="1031.068,566.961 1031.068,577.655   1043.723,577.965 1044.294,568.128 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_45" points="347.39353942871094,271.5018539428711 389.43553161621094,272.00585174560547 396.7715301513672,245.5998764038086 385.80149841308594,224.84685516357422 374.39854431152344,227.62987518310547 357.52854919433594,208.19185638427734 325.43650817871094,234.41585540771484 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_46" points="1075.308,590.397 1068.232,581.521   1070.758,570.455 1080.984,565.529 1091.211,570.455 1093.736,581.521 1086.658,590.397 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_47" points="574.0578689575195,334.6487808227539 578.4098587036133,338.1287612915039 556.501838684082,341.84778594970703 556.501838684082,323.5647659301758 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_48" points="655.6438255310059,225.39177703857422 655.6438255310059,236.09276580810547 668.2958641052246,236.3957748413086 668.8708152770996,226.55876922607422 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_49" points="576.191162109375,221.1150131225586 567.6461791992188,222.69200897216797 562.002197265625,216.07903289794922 564.9111938476562,207.88802337646484 573.4541625976562,206.30803680419922 579.0932006835938,212.92101287841797 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_50" points="604.309,283.947 604.309,294.645   617.535,294.389 617.535,285.114 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_51" points="677.3356971740723,184.40838623046875 670.2586708068848,175.5313720703125 672.7887001037598,164.46536254882812 683.0136756896973,159.54037475585938 693.2366981506348,164.46536254882812 695.7656898498535,175.5313720703125 688.6846961975098,184.40838623046875 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_52" points="303.6517639160156,105.47968292236328 294.5677795410156,151.4986801147461 361.0407409667969,158.17967987060547 377.0347595214844,129.35066986083984 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_53" points="1057.909,602.939 1049.363,604.521   1043.723,597.907 1046.628,589.714 1055.174,588.14 1060.814,594.753 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <rect id="svg_54" stroke="#010101" fill="none" height="18.155" width="30.912" y="437.707" x="402.066"/>
+   <rect id="svg_55" stroke="#010101" fill="none" height="5.188" width="29.564" y="450.675" x="487.758"/>
+   <rect id="svg_56" stroke="#010101" fill="none" height="17.636" width="25.963" y="691.507" x="565.949"/>
+   <rect id="svg_57" stroke="#010101" fill="none" height="40.392" width="17.01" y="653.708" x="687.32"/>
+   <rect id="svg_58" stroke="#010101" fill="none" height="17.634" width="17.004" y="684.767" x="644.789"/>
+   <rect id="svg_59" stroke="#010101" fill="none" height="25.868" width="47.904" y="590.898105" x="761.106753"/>
+   <polygon id="svg_60" points="441.37796688079834,272.1812286376953 421.66995906829834,304.34022521972656 476.50797176361084,307.4522247314453 515.1989507675171,289.8162384033203 464.7189702987671,292.92823791503906 461.87995052337646,270.10523986816406 " stroke="#010101" fill="none"/>
+   <polygon id="svg_61" points="376.9982452392578,508.4291687011719 404.6142120361328,536.4371643066406 529.5712432861328,529.6971740722656 451.6592559814453,504.7971496582031 408.5652618408203,486.1251525878906 " stroke="#010101" fill="none"/>
+   <polygon id="svg_62" points="903.513,195.164 907.864,198.645   885.956,202.364 885.956,184.081 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_63" points="916.535,156.33 916.535,167.03   929.188,167.335 929.761,157.497 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_64" points="943.376,192.316 934.83,193.893   929.188,187.279 932.095,179.09 940.638,177.509 946.277,184.122 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_65" points="836.76,209.799 838.209,216.479   819.203,216.995 819.203,198.71 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_66" points="839.432,179.454 839.432,190.151   852.657,189.897 852.657,180.621 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_67" points="866.271,215.44 857.727,217.017   852.086,210.403 854.991,202.214 863.537,200.637 869.174,207.249 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_68" points="455.39959716796875,152.0753231048584 425.319580078125,181.44733238220215 438.8045654296875,205.3073329925537 461.234619140625,212.2243251800537 467.33160400390625,202.19533348083496 493.00555419921875,204.0103359222412 497.15362548828125,162.77232933044434 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_69" points="821.636604309082,111.90628051757812 819.302619934082,139.02926635742188 836.679573059082,141.10626220703125 849.9046096801758,135.38926696777344 847.3086013793945,118.54327392578125 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_70" points="329.6079406738281,11.465484619140625 366.1199645996094,41.806488037109375 410.8538818359375,41.806488037109375 410.8538818359375,64.75750732421875 329.6079406738281,64.75750732421875 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_71" points="817.7320098876953,298.4465980529785 834.1369781494141,270.0316047668457 850.5449981689453,298.4465980529785 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_72" points="960.774,179.768 953.696,170.891   956.225,159.825 966.451,154.899 976.674,159.825 979.203,170.891 972.122,179.768 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_73" points="866.867,350.939 871.217,354.418   849.308,358.132 849.308,339.849 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_74" points="869.536,320.597 869.536,331.291   882.19,331.601 882.762,321.764 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_75" points="974.3069949150085,94.3292236328125 1016.3489871025085,94.83322143554688 1023.6849856376648,68.42724609375 1012.7149538993835,47.674224853515625 1001.311999797821,50.457244873046875 984.4420046806335,31.020233154296875 952.3499636650085,57.24322509765625 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_76" points="1045.8368530273438,197.47657775878906 1038.7618408203125,188.59959411621094 1041.287841796875,177.5345916748047 1051.5138549804688,172.6085968017578 1061.7408447265625,177.5345916748047 1064.2658081054688,188.59959411621094 1057.1878051757812,197.47657775878906 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_77" points="1073.741,295.981 1078.093,299.46   1056.186,303.18 1056.186,284.897 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_78" points="1076.412,265.639 1076.412,276.339   1089.064,276.643 1089.639,266.806 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_79" points="1103.253,301.624 1094.708,303.201   1089.064,296.588 1091.973,288.398 1100.516,286.817 1106.155,293.431 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_80" points="999.309,288.763 999.309,299.46   1012.535,299.204 1012.535,289.93 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_81" points="1120.651,289.075 1113.574,280.198   1116.104,269.133 1126.329,264.207 1136.552,269.133 1139.081,280.198 1132,289.075 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_82" points="450.63421630859375,44.263755798339844 441.54913330078125,90.28376007080078 508.02215576171875,96.9637680053711 524.0161743164062,68.13475799560547 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_83" points="896.377,356.575 887.831,358.156   882.19,351.543 885.096,343.35 893.642,341.776 899.282,348.389 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <rect id="svg_84" stroke="#010101" fill="none" height="18.155" width="30.912" y="650.49037" x="855.957363"/>
+   <rect id="svg_85" stroke="#010101" fill="none" height="5.188" width="29.564" y="684.395" x="883.67"/>
+   <rect id="svg_86" stroke="#010101" fill="none" height="17.637" width="25.963" y="588.336574" x="837.620007"/>
+   <rect id="svg_87" stroke="#010101" fill="none" height="40.393" width="17.01" y="123.752395" x="90.926081"/>
+   <rect id="svg_88" stroke="#010101" fill="none" height="17.633" width="17.004" y="649.237" x="995.375"/>
+   <rect id="svg_89" stroke="#010101" fill="none" height="25.868" width="47.904" y="508.664313" x="311.269233"/>
+   <polygon id="svg_90" points="805.0797805786133,409.27064514160156 785.3707962036133,441.4296417236328 840.2087478637695,444.5396270751953 878.900764465332,426.9055938720703 828.4197463989258,430.01759338378906 825.5817337036133,407.19459533691406 " stroke="#010101" fill="none"/>
+   <polygon id="svg_91" points="144.57958984375,31.62042236328125 172.195556640625,59.62738037109375 297.15252685546875,52.88739013671875 219.2406005859375,27.9884033203125 176.1466064453125,9.31640625 " stroke="#010101" fill="none"/>
+   <polygon id="svg_92" points="105.375,574.337 109.727,577.817   87.819,581.537 87.819,563.254 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_93" points="118.398,535.503 118.398,546.203   131.049,546.508 131.624,536.67 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_94" points="145.239,571.488 136.693,573.065   131.049,566.452 133.958,558.263 142.5,556.682 148.14,563.295 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_95" points="38.623,588.972 40.072,595.651   21.066,596.168 21.066,577.883 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_96" points="41.294,558.627 41.294,569.324   54.52,569.069 54.52,559.794 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_97" points="68.135,594.612 59.589,596.189   53.949,589.576 56.854,581.387 65.4,579.81 71.037,586.422 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_98" points="198.394,558.627 168.314,587.999   181.798,611.858 204.229,618.775 210.326,608.747 236,610.562 240.148,569.324 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_99" points="87.919,607.036 85.585,634.159   102.962,636.235 116.188,630.519 113.592,613.673 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_100" points="21.066,632.215 57.578,662.556   102.312,662.556 102.312,685.507 21.066,685.507 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_101" points="180.646,659.903 197.051,631.488   213.458,659.903 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_102" points="162.637,558.94 155.559,550.062   158.087,538.998 168.314,534.071 178.537,538.998 181.066,550.062 173.985,558.94 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_103" points="68.73,730.111 73.08,733.591   51.17,737.305 51.17,719.021 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_104" points="71.399,699.77 71.399,710.464   84.053,710.773 84.625,700.938 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_105" points="115.638,723.206 108.563,714.329   111.088,703.264 121.315,698.338 131.542,703.264 134.067,714.329 126.989,723.206 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_106" points="275.604,675.153 279.956,678.633   258.047,682.354 258.047,664.069 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_107" points="278.275,644.812 278.275,655.512   290.927,655.815 291.501,645.979 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_108" points="305.116,680.797 296.571,682.374   290.927,675.761 293.835,667.57 302.378,665.99 308.018,672.604 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_109" points="201.171,667.936 201.171,678.633   214.398,678.377 214.398,669.104 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_110" points="322.514,668.248 315.438,659.371   317.965,648.306 328.192,643.38 338.415,648.306 340.944,659.371 333.863,668.248 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_111" points="190.40557098388672,280.10137939453125 181.32157135009766,326.120361328125 247.79656219482422,332.80133056640625 263.7895736694336,303.97235107421875 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_112" points="98.24,735.748 89.694,737.329   84.053,730.716 86.958,722.521 95.504,720.948 101.145,727.562 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_113" points="504.59,600.795 508.941,604.275   487.033,607.995 487.033,589.712 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_114" points="517.611,561.961 517.611,572.661   530.264,572.966 530.838,563.128 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_115" points="545.365,716.138 536.818,717.715   531.176,711.102 534.084,702.912 542.627,701.331 548.266,707.944 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_116" points="437.837,615.43 439.287,622.109   420.28,622.626 420.28,604.341 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_117" points="440.508,585.085 440.508,595.782   453.734,595.527 453.734,586.252 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_118" points="467.35,621.07 458.804,622.646   453.163,616.034 456.068,607.845 464.614,606.268 470.251,612.88 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_119" points="197.5030517578125,707.6953392028809 167.42205810546875,737.0673484802246 180.90704345703125,760.9273338317871 203.33795166015625,767.8443260192871 209.43402099609375,757.8153343200684 235.10797119140625,759.6303367614746 239.2559814453125,718.3933372497559 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_120" points="487.134,633.494 484.8,660.617   502.177,662.693 515.402,656.977 512.807,640.131 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_121" points="420.28,658.673 456.792,689.014   501.526,689.014 501.526,711.965 420.28,711.965 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_122" points="344.0259704589844,741.3308944702148 360.4329528808594,712.9159164428711 376.8390197753906,741.3308944702148 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_123" points="612.6897888183594,733.777473449707 605.6117858886719,724.900520324707 608.1388244628906,713.8335037231445 618.3648376464844,708.9085159301758 628.5877990722656,713.8335037231445 631.1167907714844,724.900520324707 624.0368347167969,733.777473449707 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_124" points="467.944,756.569 472.294,760.049   450.385,763.763 450.385,745.479 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_125" points="470.613,726.229 470.613,736.922   483.268,737.231 483.839,727.395 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_126" points="514.852,749.664 507.777,740.787   510.303,729.722 520.529,724.796 530.756,729.722 533.281,740.787 526.203,749.664 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_127" points="659.6247978210449,792.0121154785156 663.9768486022949,795.4911193847656 642.0688896179199,799.2111511230469 642.0688896179199,780.9281311035156 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_128" points="652.6318893432617,743.9545211791992 652.6318893432617,754.6545333862305 665.284782409668,754.9584884643555 665.8588790893555,745.1215133666992 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_129" points="771.2729415893555,779.9395294189453 762.727897644043,781.5165557861328 757.083854675293,774.9035186767578 759.9919357299805,766.7135162353516 768.5349655151367,765.1335601806641 774.1759567260742,771.7465362548828 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_130" points="573.9182968139648,763.8574676513672 573.9182968139648,774.5544891357422 587.1443710327148,774.2985076904297 587.1443710327148,765.0245208740234 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_131" points="270.27020263671875,713.2867050170898 266.50811767578125,720.7196884155273 257.043212890625,723.4007186889648 257.043212890625,731.5697250366211 266.50811767578125,734.7237167358398 270.27020263671875,740.8207015991211 278.82818603515625,740.8207015991211 282.06719970703125,736.4076766967773 287.95721435546875,731.5907211303711 287.95721435546875,723.4007186889648 282.06719970703125,719.9416732788086 277.01019287109375,713.2867050170898 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_132" points="832.1556525230408,733.5687770843506 825.0767340660095,724.6937770843506 827.6067023277283,713.6278591156006 837.8326544761658,708.7018337249756 848.0557379722595,713.6278591156006 850.5847296714783,724.6937770843506 843.5026984214783,733.5687770843506 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_133" points="720.9839344024658,680.409294128418 711.8999500274658,726.4292526245117 778.3719348907471,733.109245300293 794.3669300079346,704.2802658081055 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_134" points="497.454,762.206 488.908,763.787   483.268,757.174 486.173,748.98 494.719,747.406 500.359,754.02 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_135" points="943.9857864379883,729.8318557739258 948.337776184082,733.3118362426758 926.4287796020508,737.031867980957 926.4287796020508,718.7488479614258 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_136" points="1021.4272222518921,711.9344787597656 1021.4272222518921,722.6344299316406 1034.0801763534546,722.9394226074219 1034.6541509628296,713.1014709472656 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_137" points="1082.0899057388306,685.1096000671387 1073.542908668518,686.6865653991699 1067.9009408950806,680.0735893249512 1070.8088998794556,671.8845634460449 1079.3518686294556,670.3025932312012 1084.990906715393,676.9166069030762 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_138" points="849.8530654907227,775.066577911377 851.3021011352539,781.745532989502 832.2960586547852,782.2625617980957 832.2960586547852,763.9775276184082 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_139" points="897.6193656921387,775.3212203979492 897.6193656921387,786.0182418823242 910.8453788757324,785.7632369995117 910.8453788757324,776.4882125854492 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_140" points="988.8818225860596,727.559684753418 980.3348255157471,729.1367111206055 974.6937732696533,722.5237350463867 977.5997791290283,714.3337326049805 986.1448230743408,712.756706237793 991.7817859649658,719.3696823120117 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_141" points="587.6714782714844,501.5345153808594 557.5904846191406,530.9065246582031 571.0754699707031,554.7655334472656 593.5064392089844,561.6825256347656 599.6024475097656,551.6545104980469 625.2764587402344,553.4685363769531 629.4244079589844,512.2315368652344 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_142" points="925.5537414550781,609.7516555786133 918.4757385253906,600.8747024536133 921.0028381347656,589.809700012207 931.2287902832031,584.882698059082 941.4518127441406,589.809700012207 943.9807434082031,600.8747024536133 936.9007873535156,609.7516555786133 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+   <polygon id="svg_143" points="948.4908142089844,487.1325149536133 939.4068298339844,533.1515579223633 1005.8788757324219,539.8325881958008 1021.8738708496094,511.0034866333008 " stroke-miterlimit="10" stroke="#010101" fill="none"/>
+				<rect id="testbinrect" style="display:none" width="511.822" height="339.235" fill="none" stroke="#010101" />
+</svg>
+
+			</div>
+			<div id="bins"></div>
+			
+			<input id="fileinput" type="file" style="visibility:hidden" />
+		</div>
+	</body>
+</html>

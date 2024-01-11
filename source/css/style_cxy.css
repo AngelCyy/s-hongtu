@@ -1,0 +1,120 @@
+﻿.swiper-img {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  width: 100%;
+  /* filter: brightness(10) */
+}
+
+.swiper-img-480 {
+  height: 480px;
+}
+
+.swiper-img-200 {
+  height: 330px;
+  border-radius: 20px;
+}
+
+.swiper-pagination-bullet {
+  width: 21px;
+  height: 21px;
+  color: #8F9DA4;
+  text-decoration: none;
+  text-align: right;
+  background: url(../img/dot.png) 5px 5px no-repeat;
+  opacity: 1
+}
+
+.swiper-pagination-bullet-active {
+  background-position: 0 bottom;
+}
+
+.product-outer {
+  background-image: url(../img/about_as.png);
+}
+
+.product-bg {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: transparent;
+  background-position: 50% 50%;
+  background-image: url(../img/chanping2.png);
+
+}
+
+.careers-in-div {
+  width: 190px;
+  height: 120px;
+  background: #FFFFFF;
+  box-shadow: 0px 0px 20px 0px rgba(20, 113, 255, 0.12);
+  border-radius: 20px;
+  color: #666666;
+  font-size: 16px;
+  line-height: 28px;
+  float: left;
+  margin-right: 10px;
+  overflow: hidden;
+  margin-top: 20px
+}
+
+.careers-in-div-chi {
+  font-size: 24px;
+  color: #0E78EF;
+  line-height: 33px;
+  padding-top: 10px;
+  padding-bottom: 5px;
+}
+
+.img-responsive1 {
+  position: absolute;
+  top: -30px;
+  width: 600px;
+  height: 400px;
+
+}
+
+.product-text {
+  position: absolute;
+  left: 650px;
+  top: 22%
+}
+
+.swiper-container1 {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.swiper-container1 .swiper-slide {
+
+  width: 80%;
+}
+
+/* .swiper-container1 .swiper-slide:nth-child(2n) {
+  width: 60%;
+}
+
+.swiper-container1 .swiper-slide:nth-child(3n) {
+  width: 40%;
+} */
+.swiper-container1 .swiper-div {
+  color: #fff;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+
+.swiper-container1 .swiper-div div:nth-child(1) {
+  font-size: 36px;
+  line-height: 50px;
+}
+
+.swiper-container1 .swiper-div div:nth-child(2) {
+  font-size: 16px;
+
+}
+
+.product-outer1 {
+  background-image: url(https://website-mp4.obs.cn-north-4.myhuaweicloud.com/images/product-outer1.png);
+  height: 380px;
+}

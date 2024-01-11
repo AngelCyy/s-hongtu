@@ -1,0 +1,278 @@
+@charset "utf-8";
+*{padding: 0;margin: 0;}
+body{background: #fff;overflow: hidden}
+ul li{list-style: none;}
+.clearfix:after{content: " "; display: block; height: 0;clear: both;}
+.clearfix{zoom:1;}
+.none{display: none}
+/* url(../images/top.png) left no-repeat*/
+#editor_panel{width:100%;height:44px;background:#535353;box-shadow:0px 3px 6px #000, 1px 2px 1px rgba(0,0,0,0.3);position: fixed;top: 0;left: 0;}
+
+#editor_panel .headerTool_left{height: 44px;margin-left: 14px;padding: 6px 0;box-sizing: border-box;display: inline-block;}
+#editor_panel .headerTool_left div{display: inline-block;height:26px;}
+#editor_panel .headerTool_left .toolLeft_list{width:30px; text-align: center;padding: 3px 4px;margin: 0 4px;border-radius: 3px;}
+#editor_panel .headerTool_left .toolLeft_list:hover{background-color: #535353;}
+#editor_panel .headerTool_left .inputWrap{text-align: center;border-radius: 3px;line-height: 44px;position: relative;width: 40px;}
+#CountLength{width:40px;height:20px!important;background-color: #fff;border-radius: 3px;border: none;position: absolute;left:-15%;margin-top: 0px!important;}
+
+#editor_panel .HitBtn{display: inline-block;width: 40px;position: absolute;right: 110px;top: 5px;}
+#editor_panel .HitBtn input{width: 40px;height: 40px;border-radius: 50%;background-color: antiquewhite;color: chocolate;font-size: 18px;outline: none;border:1px solid #fff;cursor: pointer;}
+#editor_panel .HitBtn input:hover{box-shadow: 0 0 1px 2px #f60;color: crimson}
+#sidepanels{width: 152px;height:100%;position: absolute;right: 0;top: 44px;background-color: #535353;z-index: 100;
+    overflow-y:auto;
+}
+/*滚动条样式*/
+.scrollbar::-webkit-scrollbar{
+    width:2px;
+    height:40px;
+}
+.scrollbar::-webkit-scrollbar-thumb{
+    background-color: #999;
+    border-radius:10px;
+    -webkit-box-shadow:inset 1px 1px 0 rgba(0,0,0,.1);
+}
+.scrollbar::-webkit-scrollbar-track{
+    border-radius:10px;
+    -webkit-box-shadow:inset 0 0 6px rgba(0,0,0,0);
+}
+
+/*#sidepanels{
+    scrollbar-arrow-color: #f00; !**!!*三角箭头的颜色*!
+    scrollbar-face-color: #f00; !**!!*立体滚动条的颜色*!
+    scrollbar-3dlight-color: #f00; !**!!*立体滚动条亮边的颜色*!
+    scrollbar-highlight-color: #f00; !**!!*滚动条空白部分的颜色*!
+    scrollbar-shadow-color: #f00; !**!!*立体滚动条阴影的颜色*!
+    scrollbar-darkshadow-color: #f00; !**!!*立体滚动条强阴影的颜色*!
+    scrollbar-track-color: #f00; !**!!*立体滚动条背景颜色*!
+    scrollbar-base-color:#f00; !**!!*滚动条的基本颜色*!
+}*/
+
+    /*一下为打版、推板公共部分*/
+#sidepanels .toolbar{padding:0 6px;}
+#sidepanels .toolbar_tool{display: inline-block;width:40%;height: 26px; padding: 4px 4%;margin: 4px 0;border-radius: 3px;}
+#sidepanels .toolbar_tool img{width: 100%;height: 100%;}
+.toolbar_tool:hover{background-color: #585858;}
+.toolbar .toolCover{position: absolute;z-index: 1000;}
+
+.asideTop{height: 8px;width: 100%; background-color: #393939;border-left: 1px solid #313131;border-bottom: 1px solid #313131;}
+
+#tool_userMode{width: 100%;margin:0px auto 2px auto;font-size:12px;text-align: center;background-color: #424242;cursor:pointer;height: 34px;line-height:34px;text-align:center;color: #fff;}
+#tool_userMode div{display: inline-block;width: 50px;height:100%;float: left;border-bottom: 1px solid #313131;}
+#tool_userMode .ModeSelected{border-bottom: none; background-color: #535353;}
+.empty{width: 100%;height: 100%;}
+/*#tool_userMode:hover{background-color: #4a4a4a;}*/
+/*打版  start*/
+#ClothesHit {margin-bottom: 40px;}
+#ClothesHit .toolbar .toolCover2{height: 126px;}
+#ClothesHit .toolbar .toolCover4{height: 84px;}
+#ClothesHit .toolbar .toolCover2 img{height: 126px;width: 140px;}
+#ClothesHit .toolbar .toolCover4 img{height: 84px;width: 140px;}
+
+/*推板 start*/
+#ClothesPush{display: none;margin-top: 8px;margin-bottom: 40px;}
+#ClothesPush .toolbar .toolCover2{height: 168px;}
+#ClothesPush .toolbar .toolCover3{height: 126px;}
+#ClothesPush .toolbar .toolCover2 img{height: 168px;width: 140px;}
+#ClothesPush .toolbar .toolCover3 img{height: 126px;width: 140px;}
+
+/**/
+/*提取公共部分*/
+.top_right_btn > div{display: inline-block}
+.top_right_btn{width:70px;}
+.top_right_btn span{display:inline-block;height: 100%;position: relative;top: -6px;color: #fff;}
+.top_right_btn img{position: relative;top: 4px;right: -2px;}
+
+/*弹出框display: none;*/
+#PopupBox{width:100%;height:150%;z-index: 999999;border: 1px solid transparent;position: relative;top:10px;display: none;}
+#PopupBox_cont{width:300px;height:230px;margin: 20% auto;position: relative;border-radius: 5px; -moz-border-radius: 5px;
+    -moz-box-shadow: 2px 5px 10px rgba(0,0,0,.3);-webkit-box-shadow: 2px 5px 10px rgba(0,0,0,.3);box-shadow: 2px 5px 10px rgba(0,0,0,.3);
+    overflow: hidden; display: none;}
+.Fun_caption{height:40px;background-color: #eee;border-bottom: 1px solid #666;line-height: 40px;}
+.Fun_caption h2{display: inline-block;float: left;font-size: 14px;font-weight: normal;color: black;text-indent: 10px;}
+#Fun_main{background: #fcd9ba;width: 300px;height:150px;}
+#Fun_main > div{width: 300px;height: 30px;box-sizing: border-box;border-bottom:1px solid #f99;}
+#Fun_main > div > div{display: inline-block;height:30px;height: 100%;box-sizing: border-box;line-height: 30px;}
+#Fun_main > div .Pop_left{width: 28%;border-right:1px solid #f99;text-align: center;float: left; }
+#Fun_main > div .Pop_right{width: 68%;text-align: left;text-indent: 8px;float: right;}
+#Popup_btns{width:300px;height:40px;position: absolute;top:190px; background-color: #fff;}
+#Popup_btns button{width: 50px;height:30px;text-align: center;position: absolute;right:20px;top:5px;border-radius: 3px;outline: none;border: none;}
+#Popup_btns button:hover{background-color: #9a9a9a;}
+.Fun_caption div{width: 30px;height: 30px;}
+.Popup_close{ display: inline-block;float: right;text-align: center;width:25px;height: 25px;}
+.Popup_close:hover{background: #999999;}
+
+#PopupBox .pop_btn{border: none;padding: 4px 6px;margin:0 2px;box-shadow: 0 0 2px rgba(0,0,0,.5); }
+#PopupBox .pop_btn:hover{ background-color: #fcc;}
+
+/*裁片属性弹出框*/
+#WovenDesignAttrSet{ width: 570px;height: 180px;font-size: 12px;margin: 20% auto;background-color: #f1f1f1;display: none;}
+.AttrSet_cont{background-color: #f0f0f0;}
+.AttrSet_cont input{height:20px;box-sizing: border-box}
+.AttrSet_cont .thumbnail{width:188px;height:146px;background-color: #333;display: inline-block;float: left;margin: 0 4px;}
+.AttrSetRight{display: inline-block;float: right;width: 370px}
+.AttrSetRight div{ display: inline-block;}
+.ModelInp_Top {width:100%;height:60px;}
+.ModelInp_Top input{width: 108px;}
+.ModelInp_Top > div{width:46%;height:100%;text-align: right;padding: 4px 0;}
+.ModelInp_Top > div > div{display: inline-block;margin: 0px 0px 4px 0px}
+.ModelInp_Top .InpTop_right select{ width:108px; }
+/*.ModelInp_Top > div input{text-align: right}*/
+.ModelInp_Mid .InpMid_left div:first-child input{width: 35px;}
+.ModelInp_Mid .InpMid_left{float: left;width: 264px;}
+.ModelInp_Mid .InpMid_left > div{margin: 4px 0;}
+.ModelInp_Mid .InpMid_right{float: right;width: 84px;height: 100px;}
+.ModelInp_Mid .InpMid_right fieldset{height: 80px;line-height: 24px;padding-left: 6px;}
+.ModelInp_Mid .InpMid_right input{width: 40px;}
+.ModelInp_Mid  input.inpbox{width: 16px;height: 16px;position: relative;top: 4px;}
+.ModelInp_Mid  input[type=button]{width: 40px;height: 22px;}
+.AttrSet_cont .ModelInp_btm input[type=button] { width: 50px; height:26px;position: relative;border: none;margin-right: 10px;}
+.ModelInp_btm input[type=button]:hover{background-color: #999999;}
+
+
+/*公用头部*/
+.table_head{ height: 26px;line-height: 26px;background-color: #fff;}
+.table_head p{ height: 100%;text-indent: 10px;font-size: 14px;display: inline-block;}
+.table_head img{width: 25px;height: 25px;float: right;}
+
+/*推板 号型名称设置弹出框*/
+#setSizetable{width:500px;height:480px;position:fixed;top:300px;background-color: #f1f1f1;border:1px solid  #1883d7;overflow: hidden;display: none;}
+#sizeTable{border: 2px solid #a0a0a0; }
+table.tableInput td{ border-right: 1px solid #c0c0c0; border-bottom: 1px solid #c0c0c0;background-color: #ffffe0; }
+table.tableInput td,table.tableInput th{ width:88px;height:20px;}
+table.tableInput th input[type=button]{width: 100%;height: 100%;border: none;padding: 0;outline: 0;}
+table.tableInput td:first-child,table.tableInput th:first-child{ width:52px;}
+table.tableInput td input{ width: 100%;height: 100%;box-sizing: border-box;background-color: #ffffe0;border: none;text-align: center;}
+table.tableInput tr:nth-child(8) td input{ background-color: #ffc8c8;}
+table.tableInput input[type=color]{ padding: 0;border: 0;height: 18px;}
+.setSize_buttons{ margin: 10px 20px;}
+.setSize_buttons input[type=button]{ width: 60px;height: 30px; border: none;padding: 4px 6px;margin:0 2px;box-shadow: 0 0 2px rgba(0,0,0,.5);box-sizing: border-box;}
+.tableInput th.selectedRule input[type=button]{ background-color: #ff0000;}
+
+/*推板 放码规则*/
+#setSizeRuleTable{position:fixed;top:300px;left:20px;width: 280px;height: 390px;border:2px solid #ddd;box-shadow:0px 0px 3px #fff;background-color: #f1f1f1;display: none;}
+.setRule_cont{padding: 10px 12px;}
+.setRule_cont label {display: inline-block;margin-bottom: 4px;}
+.setRule_cont input[type=text]{outline: none;}
+.setRule_cont .setRuleLeftT> div >label{ margin: 8px 1px;}
+
+.setRule_cont> div input[type=checkbox],.setRule_cont> div input[type=radio]{ position: relative;top: 2px;}
+.setRule_cont table.pattern2{text-align: center;}
+.setRule_cont .ruletable{ border: 2px solid #a0a0a0;width: 253px;height: 189px;background-color: #fff;}
+table.pattern2 td{ border-right: 1px solid #c0c0c0; border-bottom: 1px solid #c0c0c0;background-color: #ffffe0; }
+.setRule_cont table.pattern2 th,.setRule_cont table.pattern2 td:first-child{ border-right: 1px solid #696969; border-bottom: 1px solid #696969;font-weight:bold;background-color: #f0f0f0; }
+table.pattern2 td,table.pattern2 th{ width:85px;height:20px;}
+table.pattern2 td:first-child,table.pattern2 th:first-child{ width:80px;}
+table.pattern2 td input{ width: 100%;height: 100%;box-sizing: border-box;background-color: #ffffe0;border: none;text-align: center;}
+table.pattern2 tr:nth-child(4) td input{ background-color: #ffc8c8;}
+.setRule_buttons{ margin: 10px auto;}
+.setRule_buttons input[type=button]{ width: 60px;height: 30px; border: none;padding: 4px 6px;margin:0 2px;box-shadow: 0 0 2px rgba(0,0,0,.5);box-sizing: border-box;}
+
+
+
+/*推板 文字输入框*/
+#textInpbox{ width:300px;height:150px;margin: 20% auto;background-color: #f0f0f0;display: none; }
+.textInp_cont{padding: 10px 10px; }
+.textInp_cont div{margin-bottom: 8px;}
+.setText{margin-top: 10px;padding-left: 19px; }
+.setText input[type=text]{ width: 50px; }
+.setText div{ float: left;}
+.setText div:first-child{margin-right: 10px;width: 122px;}
+.setText div:nth-child(2){width: 100px;}
+.textInp_cont > div:nth-child(3){ text-align: center; }
+.textInp_cont > div:nth-child(3) input[type=button]{ width:54px;line-height: 28px;box-sizing: border-box;padding: 0 !important; }
+
+/*文字输入框end*/
+
+/*#ffffe0*/
+#input_panel{float:left;margin-left:20px;z-index: 100;height: 44px;box-sizing: border-box;line-height: 44px;color:#fff;font-size: 14px;position: relative;}
+#input_panel input,#parallelInp select{width:40px;height:20px;background-color: #fff;margin: 0 8px;border-radius: 3px;border: none;}
+#GaugeInp,#DoubleCompassInp,#parallelInp,#angleLineInp,#knifeMarkInp{display: none;}
+#parallelInp select{width: 64px;height:26px;}
+.ratioOption{z-index: 999999;position: relative;width: 200px;height: 150px;display: flex;justify-content: space-around;flex-wrap: wrap; background-color: #fcf;text-align: center;color: #000;
+            top: -20px;right: -150px;border: 1px solid #fff;border-radius: 3px;z-index: 999999;
+            display: none;
+}
+.InpNone{display: none;}
+.ratioOption li{width: 25%;padding: 0;margin: 0;height: 26px;line-height: 26px;z-index: 99999;}
+.ratioOption li:hover{background-color: #68c5cd;cursor: pointer;}
+/*#knifeMarkInp,*/
+
+#FunExplicate{width: 100%;height: 28px;position: absolute;top: 46px;background-color: rgba(0,0,0,.2);font-size: 14px;line-height: 28px;
+    box-shadow:inset 0 0 1px 3px rgba(0,0,0,.25);}
+    /*box-shadow: 0 1px 1px  rgba(0,0,0,.5) inset;}*/
+#FunExplicate span{text-indent: 20px;font-size: 16px;color:red;}
+#Fun_name{color:#639;text-indent: 4px;}
+
+
+/*#svgcontent g:first-child path{stroke: #fff;fill:none;}*/
+#pointLineGroup path{stroke: none;fill:none;}
+
+/*枣弧省属性表*/
+#provinceAttr{position: fixed;right:180px;bottom: 30px;width:350px;background-color: #f0f0f0;}
+#provinceAttr .header{height:30px;font-size: 12px;color: #999999;background-color: #fff;box-sizing: border-box; }
+#provinceAttr .header h3{display: inline-block;float: left;padding: 5px;}
+.closeAttr{float: right;display: inline-block;}
+.closeAttr:hover{background: #ff0000;}
+.closeAttr img{width: 24px;height: 24px;}
+.provinceLeft{padding: 5px 0px 5px 5px;display: inline-block;float: left;}
+.provinceRight{display: inline-block;float: right;width: 240px;}
+.bitOffset{margin-top: 5px;}
+.bitOffset h4{text-align: center;}
+.bitOffset .inpW{text-align: center;}
+.provinceInp{width: 50px;height: 10px;margin: 5px;}
+.attrLeft{float: left;margin-left: 5px;}
+.curveW{height: 18px;line-height: 18px;}
+#provinceCurve{margin-top: 6px;margin-right: 8px;background-color: #fff;}
+.clearDiv{clear: both;}
+.barWrap{height: 24px;line-height: 24px;margin-left: 5px;}
+.barPrent{width: 140px;height: 2px;background-color: #a0a0a0;display: inline-block;margin-left: 20px;position: relative;}
+.bar{height:10px;width:6px;position: absolute;top:-4px;left:70px;background-color: #fff; }
+#butGroup{height: 40px;text-align: right;padding: 10px 10px;box-sizing: border-box;}
+#butGroup button{margin-left: 10px;width: 50px;height: 20px;text-align: center;line-height: 10px;}
+
+/*要素属性定义表格*/
+#elementAttr{ position: fixed;right:180px;bottom: 30px;width:300px;height:80px;background-color: #f0f0f0;display: none;}
+#elementAttr  .eleAttrBtn { padding:10px 15px;display: flex;justify-content: space-around;}
+#elementAttr  .eleAttrBtn input{ display: inline-block;width: 50px;height: 30px;border: none;background-color:#f9e2d3;box-shadow:inset -1px -1px 8px rgba(0,0,0,0.5);}
+#elementAttr  .eleAttrBtn input.selected{background-color:#222222;color: #fff;}
+
+/*点规则拷贝*/
+#copyRulerCheck{ position: fixed;left:150px;top: 90px;width:550px;height:70px;background-color: #f0f0f0;}
+#copyRulerCheck .copyRulers{  padding:10px 15px;display: flex;justify-content: space-around;  }
+#copyRulerCheck .copyRulers input{  position: relative;top: 2px;  }
+/*捕捉偏移点*/
+#offsetInp{position: fixed;left:80px;top: 100px;width:240px;height:100px;background-color: #f0f0f0;display: none;}
+.inputOff {display: flex; padding: 4px 10px; justify-content: space-around;}
+#offsetInp input[type=text]{ width:50px;margin-left: 5px;}
+.InpBtn {padding: 4px 10px; }
+#offsetInp input[type=button]{ width:40px;height:26px;margin-left: 10px;}
+
+
+/*底部放码规则显示*/
+#rulerShow_bottom{width:780px;height: 30px;position:fixed;bottom:4px;left:4px;background-color: #999999;display: none;}
+#rulerShow_bottom > div{display: inline-block;height:100%;line-height: 30px;}
+#rulerShow_bottom > div:first-child{width: 130px;}
+#rulerShow_bottom input[type=button]{ text-align: center;}
+#changeMode{ width:70px; height:28px;border: none;text-align: center}
+#showAllruler{ width:50px; height: 28px;border: none;text-align: center;}
+#rulerShow_color{width: 620px;display: flex;justify-content: space-between;flex-wrap:nowrap;margin-left: 20px;}
+#rulerShow_color input[type=button]{ width:40px;height:24px;text-align: center;box-sizing: border-box;border: 1px solid #f9e2d3;outline: none;}
+#rulerShow_color input.showPutyard[type=button]{ border: 2px solid #f11; }
+
+#symmetricTransform{position: fixed;left:20px;top:80px;width: 220px;background-color: #FFFFFF;}
+#symmetricTransform .header h3{display: inline-block;color: #999999;padding: 2px 4px;height: 24px;}
+#symmetricTransform .context{background-color: #f0f0f0;height: 40px;box-sizing:border-box;padding: 0px 10px;line-height: 40px;}
+#symmetricTransform .context label{margin: 0 15px;vertical-align: middle;}
+#symmetricTransform .context label input{position: relative;top:2px;}
+
+
+
+
+
+
+
+
+
+
+
+
