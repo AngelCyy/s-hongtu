@@ -535,7 +535,8 @@ h2 {
   position: relative;
   float: none;
   display: inline-block;
-  padding-right: 2%
+  width: 11%;
+  text-align: center;
 }
 
 /*.navbar-inverse .navbar-nav>li:after {
