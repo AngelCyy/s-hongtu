@@ -1169,6 +1169,9 @@ responsive area
     display: block !important;
   }
 
+  .swiper-img-480 {
+    height: 500px !important;
+  }
 
   .navbar-collapse {
     display: none;
@@ -1230,7 +1233,116 @@ responsive area
 
 }
 
+@media only screen and (max-width: 1000px) {
+
+  .careers {
+    display: none;
+  }
+
+  .swiper-container3,
+  .swiper-container2 {
+    display: block;
+  }
+
+  #wowslider-container2 .careers-in-div {
+
+    width: 30%;
+  }
+
+  .navbar-header {
+    width: 100%;
+  }
+
+  .mobile {
+    float: right;
+    display: block;
+    position: relative;
+    z-index: 1020;
+    pointer-events: all;
+    color: #fff;
+    width: 46px;
+    height: 34px;
+    border-radius: 3px;
+    background: rgba(114, 114, 114, 0.9);
+    text-align: center;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .mobile-actions.translate {
+    -webkit-transform: translate3d(0, 215px, 0);
+    transform: translate3d(0, 215px, 0);
+    opacity: 1;
+  }
+
+  .mobile-actions {
+    position: fixed;
+    top: -170px;
+    right: 10px;
+    display: block !important;
+    opacity: 0;
+    z-index: 999;
+    cursor: pointer;
+    height: 172px;
+    -webkit-overflow-scrolling: touch;
+    -webkit-transition: all .4s cubic-bezier(.7, 0, .3, 1);
+    transition: all .4s cubic-bezier(.7, 0, .3, 1);
+  }
+
+  .mobile-actions li {
+    margin: 5px;
+  }
+
+  .mobile-actions li a {
+    display: block;
+    position: relative;
+    z-index: 1020;
+    pointer-events: all;
+    color: #fff;
+    width: 46px;
+    height: 34px;
+    border-radius: 3px;
+    background: rgba(114, 114, 114, 0.9);
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .mobile-actions li a .fa,
+  .mobile-actions li a .entypo {
+    display: inline-block;
+    zoom: 1;
+    margin: 8px auto;
+    font-size: 18px;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.2);
+  }
+
+  .entypo-mail:before {
+    content: '\e919';
+  }
+
+  .mobile_middle_image {
+    display: block !important;
+  }
+
+  .desktop_middle_image {
+    display: none !important;
+  }
+
+  .mobile {
+    display: block !important;
+  }
+
+  .fa-mobile {
+    font-size: 35px;
+  }
+}
+
 @media (max-width: 767px) {
+  .swiper-img-480 {
+    height: 420px !important;
+    min-height: 420px;
+  }
+
   #wowslider-container4 .col-sm-10 {
     width: 100%;
   }
@@ -1381,108 +1493,6 @@ responsive area
   }
 }
 
-@media only screen and (max-width: 1000px) {
-  .careers {
-    display: none;
-  }
-
-  .swiper-container3,
-  .swiper-container2 {
-    display: block;
-  }
-
-  #wowslider-container2 .careers-in-div {
-
-    width: 30%;
-  }
-
-  .navbar-header {
-    width: 100%;
-  }
-
-  .mobile {
-    float: right;
-    display: block;
-    position: relative;
-    z-index: 1020;
-    pointer-events: all;
-    color: #fff;
-    width: 46px;
-    height: 34px;
-    border-radius: 3px;
-    background: rgba(114, 114, 114, 0.9);
-    text-align: center;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-
-  .mobile-actions.translate {
-    -webkit-transform: translate3d(0, 215px, 0);
-    transform: translate3d(0, 215px, 0);
-    opacity: 1;
-  }
-
-  .mobile-actions {
-    position: fixed;
-    top: -170px;
-    right: 10px;
-    display: block !important;
-    opacity: 0;
-    z-index: 999;
-    cursor: pointer;
-    height: 172px;
-    -webkit-overflow-scrolling: touch;
-    -webkit-transition: all .4s cubic-bezier(.7, 0, .3, 1);
-    transition: all .4s cubic-bezier(.7, 0, .3, 1);
-  }
-
-  .mobile-actions li {
-    margin: 5px;
-  }
-
-  .mobile-actions li a {
-    display: block;
-    position: relative;
-    z-index: 1020;
-    pointer-events: all;
-    color: #fff;
-    width: 46px;
-    height: 34px;
-    border-radius: 3px;
-    background: rgba(114, 114, 114, 0.9);
-    text-align: center;
-    cursor: pointer;
-  }
-
-  .mobile-actions li a .fa,
-  .mobile-actions li a .entypo {
-    display: inline-block;
-    zoom: 1;
-    margin: 8px auto;
-    font-size: 18px;
-    text-shadow: 0 1px rgba(0, 0, 0, 0.2);
-  }
-
-  .entypo-mail:before {
-    content: '\e919';
-  }
-
-  .mobile_middle_image {
-    display: block !important;
-  }
-
-  .desktop_middle_image {
-    display: none !important;
-  }
-
-  .mobile {
-    display: block !important;
-  }
-
-  .fa-mobile {
-    font-size: 35px;
-  }
-}
 
 /* xs */
 @media (max-width: 480px) {}
